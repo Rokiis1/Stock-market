@@ -1,5 +1,8 @@
 import pandas as pd
-from statsmodels.tsa.arima_model import ARIMA
+from statsmodels.tsa.arima.model import ARIMA
+import warnings
+
+warnings.filterwarnings("ignore")
 
 sectors = {"Technology": "tech", "Healthcare": "health", "Financial services": "finance", "Consumer goods": "consumer", "Energy": "energy", "Retail": "retail", "Manufacturing": "manufacturing", "Real estate": "realestate", "Transportation": "transportation", "Telecommunications": "telecom"}
 
@@ -36,11 +39,12 @@ for year in range(5):
     financial_data = financial_data.append({"Symbol": symbol, "Sector": sector, "Year": year+1, "Revenue": revenue, "Operations": operations, "Net Income": net_income, "EPS": eps, "Current Assets": current_assets, "Current Liabilities": current_liabilities, "Shareholder Equity": shareholder_equity, "Cash Flow from Operations": cash_flow_operations, "Free Cash Flow": free_cash_flow, "Cash and Cash Equivalents": cash_equivalents}, ignore_index=True)
 
 # Fit the time series model
+financial_data = financial_data.set_index('Year', inplace=True)
 model = ARIMA(financial_data['Revenue'], order=(1,1,0))
-model_fit = model.fit(disp=0)
+model_fit = model.fit()
 
 # Make predictions for the next five years
-future_predictions = model_fit.forecast(steps=5)[0]
+future_predictions = model_fit.forecast(steps=5, dynamic=True)[0]
 
 # Print the predictions
 for i, prediction in enumerate(future_predictions):
