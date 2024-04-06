@@ -1,5 +1,7 @@
 import pandas as pd
-from statsmodels.tsa.arima.model import ARIMA
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LinearRegression
+import numpy as np
 import warnings
 
 warnings.filterwarnings("ignore")
@@ -7,7 +9,7 @@ warnings.filterwarnings("ignore")
 sectors = {"Technology": "tech", "Healthcare": "health", "Financial services": "finance", "Consumer goods": "consumer", "Energy": "energy", "Retail": "retail", "Manufacturing": "manufacturing", "Real estate": "realestate", "Transportation": "transportation", "Telecommunications": "telecom"}
 
 # Create an empty dataframe to store the financial data
-financial_data = pd.DataFrame(columns=["Symbol", "Sector", "Year", "Revenue", "Operations", "Net Income", "EPS", "Current Assets", "Current Liabilities", "Shareholder Equity", "Cash Flow from Operations", "Free Cash Flow", "Cash and Cash Equivalents"])
+financial_data = pd.DataFrame(columns=["Symbol", "Sector", "Year", "Revenue"])
 
 symbol = input("Enter the company symbol: ")
 
@@ -24,28 +26,24 @@ else:
 # Collect data for each year
 for year in range(5):
     # Prompt the user for the financial data
-    revenue = float(input(f"Enter the company's revenue for year {year+1}: "))
-    operations = float(input(f"Enter the company's operations for year {year+1}: "))
-    net_income = float(input(f"Enter the company's net income for year {year+1}: "))
-    eps = float(input(f"Enter the company's EPS for year {year+1}: "))
-    current_assets = float(input(f"Enter the company's current assets for year {year+1}: "))
-    current_liabilities = float(input(f"Enter the company's current liabilities for year {year+1}: "))
-    shareholder_equity = float(input(f"Enter the company's shareholder equity for year {year+1}: "))
-    cash_flow_operations = float(input(f"Enter the company's cash flow from operations for year {year+1}: "))
-    free_cash_flow = float(input(f"Enter the company's free cash flow for year {year+1}: "))
-    cash_equivalents = float(input(f"Enter the company's cash and cash equivalents for year {year+1}: "))
+    revenue = float(input(f"Enter the company's revenue for year {year+1} in billions: "))
 
-# Add the data to the dataframe
-    financial_data = financial_data.append({"Symbol": symbol, "Sector": sector, "Year": year+1, "Revenue": revenue, "Operations": operations, "Net Income": net_income, "EPS": eps, "Current Assets": current_assets, "Current Liabilities": current_liabilities, "Shareholder Equity": shareholder_equity, "Cash Flow from Operations": cash_flow_operations, "Free Cash Flow": free_cash_flow, "Cash and Cash Equivalents": cash_equivalents}, ignore_index=True)
+    # Add the data to the dataframe
+    financial_data = financial_data.append({"Symbol": symbol, "Sector": sector, "Year": year+1, "Revenue": revenue}, ignore_index=True)
 
-# Fit the time series model
-financial_data = financial_data.set_index('Year', inplace=True)
-model = ARIMA(financial_data['Revenue'], order=(1,1,0))
-model_fit = model.fit()
+# Split the data into train and test sets
+X_train, X_test, y_train, y_test = train_test_split(financial_data[['Year']], financial_data['Revenue'], test_size=0.2)
+
+# Create the linear regression model
+model = LinearRegression()
+
+# Fit the model to the training data
+model.fit(X_train, y_train)
 
 # Make predictions for the next five years
-future_predictions = model_fit.forecast(steps=5, dynamic=True)[0]
+future_years = [i+6 for i in range(5)]
+future_predictions = model.predict(np.array(future_years).reshape(-1, 1))
 
 # Print the predictions
 for i, prediction in enumerate(future_predictions):
-    print(f"Predicted revenue for year {i+6}: {prediction}")
+    print(f"Predicted revenue for year {i+6}: {prediction} billion")
